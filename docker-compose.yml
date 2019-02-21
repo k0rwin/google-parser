@@ -1,0 +1,43 @@
+---
+version: "2"
+
+services:
+#  our-app:
+#    build: .
+#    environment:
+#      - MODE=dev
+#      - ELASTICSEARCH_HOST=127.0.0.1
+#      - ELASTICSEARCH_PORT=9200
+#    volumes:
+#      - .:/code
+#    depends_on:
+#      - elasticsearch
+#      - rabbitmq
+#    ports:
+#      - "9091:9090"
+
+  mongo:
+    image: mongo
+    command: --smallfiles
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: gfhjkm
+    volumes:
+      - mongodata:/data/db
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - 8081:8081
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: gfhjkm
+
+
+volumes:
+  mongodata:
+    external: true
