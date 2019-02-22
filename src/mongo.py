@@ -13,15 +13,16 @@ client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://root:gfhjkm@127.0.0.1
 db = client.google
 
 async def do_insert():
-    # document = {'id': 'org.telegram.messenger', 'hl': 'en', }
-    # document = {'id': 'jp.co.yahoo.android.yjtop', 'hl': 'en', }
-    # document = {'id': 'com.twitter.android', 'hl': 'en', }
     insert_date = datetime.now(tz=pytz.timezone('UTC'))
     document = {
-        'id': 'com.amazon.mShop.android.shopping',
+        # 'id': 'com.amazon.mShop.android.shopping',
+        # 'id': 'org.telegram.messenger',
+        # 'id': 'jp.co.yahoo.android.yjtop',
+        'id': 'com.twitter.android',
         'hl': 'en',
         'parsed': False,
-        'date': insert_date
+        'date': insert_date,
+        'perms': {},
     }
     result = await db.products.insert_one(document)
     print('result %s' % repr(result.inserted_id))
