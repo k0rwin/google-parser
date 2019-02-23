@@ -36,7 +36,6 @@ async def producer(queue, collection):
 async def consumer(queue, collection):
     while True:
         doc = await queue.get()
-        print('consumed: %s' % doc['id'])
         data = parse(doc['id'], doc['hl'])
 
         await collection.update_one({'_id': doc['_id']}, {'$set': {
@@ -51,7 +50,6 @@ async def consumer(queue, collection):
 
 
 def parse(id, hl):
-    print('Parse: %s' % id)
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0',
         'Accept': '*/*',
@@ -74,7 +72,6 @@ def parse(id, hl):
     product_title = ''
     if matches:
         product_title = matches.group(1)
-    print('product_title: %s' % product_title)
 
     matches = re.search(r'<a.*?href="https://play.google.com/store/apps/developer\?id=.*?".*?>(.*?)</a>', response.text,
                         flags=re.M | re.S)
@@ -111,8 +108,6 @@ def parse(id, hl):
     data = json.loads(data)[0]
 
     perms = []
-
-    print(data)
 
     for item in data:
         if len(item):

@@ -12,27 +12,22 @@ services:
     volumes:
       - .:/code
       - ./icons:/icons
-#    depends_on:
-#      - mongo
-#      - parser
     ports:
       - "8080:8080"
 
-#  parser:
-#    build: ./parser
-#    environment:
-#      - MONGO_USER=root
-#      - MONGO_PASS=gfhjkm
-#      - MONGO_HOST=mongo
-#      - MONGO_PORT=27017
-#      - REPARSE_EVERY_DAYS=5
-#      - DB_READ_DELAY=5
-#      - DB_READ_COUNT=100
-#    volumes:
-#      - ./parser:/code
-#      - ./icons:/icons
-#    depends_on:
-#      - mongo
+  parser:
+    build: ./parser
+    environment:
+      - MONGO_USER=root
+      - MONGO_PASS=gfhjkm
+      - MONGO_HOST=mongo
+      - MONGO_PORT=27017
+      - REPARSE_EVERY_DAYS=5
+      - DB_READ_DELAY=5
+      - DB_READ_COUNT=100
+    volumes:
+      - ./parser:/code
+      - ./icons:/icons
 
   mongo:
     image: mongo
