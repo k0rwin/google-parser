@@ -1,0 +1,39 @@
+<html>
+<head>
+    <title>Google Permissions Parser</title>
+    <link rel="stylesheet" type="text/css" href="/static/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/index.css">
+    <script src="/static/jquery-3.1.1.min.js"></script>
+    <script src="/static/semantic.min.js"></script>
+    <script src="/static/defi.min.js"></script>
+    <script src="/static/index.js"></script>
+</head>
+<body>
+<div class="ui container">
+    <h1>Google Permissions Parser</h1>
+    <div class="ui two column grid">
+        <div class="column">
+            <form class="ui form" id="form">
+                <div class="field">
+                    <label>App Link</label>
+                    <input type="text" name="link" id="link" placeholder="">
+                </div>
+                <button class="ui button" id="load" type="button">Load Permissions</button>
+            </form>
+        </div>
+        <div class="ui two column grid">
+            <h2>Result</h2>
+            <div class="ui segment" id="loader">
+                <p></p>
+                <div class="ui active dimmer">
+                    <div class="ui loader"></div>
+                </div>
+            </div>
+            <div id="result" class="result"></div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

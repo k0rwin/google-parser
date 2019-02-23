@@ -15,11 +15,13 @@ db = client.google
 async def do_insert():
     insert_date = datetime.now(tz=pytz.timezone('UTC'))
     document = {
-        # 'id': 'com.amazon.mShop.android.shopping',
+        'id': 'com.amazon.mShop.android.shopping',
         # 'id': 'org.telegram.messenger',
         # 'id': 'jp.co.yahoo.android.yjtop',
-        'id': 'com.twitter.android',
+        # 'id': 'com.twitter.android',
         'hl': 'en',
+        'title': '',
+        'company': '',
         'parsed': False,
         'date': insert_date,
         'perms': {},

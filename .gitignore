@@ -1,3 +1,6 @@
+/**/*.pyc
+
 .idea
 
-/**/*.pyc
+icons/
+src/static/node_modules/

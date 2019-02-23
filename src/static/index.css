@@ -1,0 +1,41 @@
+.result {
+    background: #eee;
+    padding: 8px;
+    display: none;
+}
+
+.result--title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 6px 0;
+}
+.result--subtitle {
+    font-size: 14px;
+    font-weight: bold;
+    margin: 0 0 10px 0;
+}
+
+.perms {
+
+}
+.perms--block {
+
+}
+.perms--block--title {
+    height: 22px;
+}
+.perms--block--title img {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    position: relative;
+    top: +4px;
+}
+.perms--block--title span {
+    display: inline-block;
+    font-size: 16px;
+    padding-left: 6px;
+}
+#loader {
+    display: none;
+}

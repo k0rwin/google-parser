@@ -2,7 +2,7 @@
 
 import asyncio, random, time
 import motor.motor_asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 import requests
 import re
@@ -11,36 +11,45 @@ import os
 import hashlib
 
 
-async def rnd_sleep(t):
-    await asyncio.sleep(t * random.random() * 2)
-
-
 async def producer(queue, collection):
     while True:
-        cursor = collection.find({'parsed': False})
+        expired = datetime.now(tz=pytz.timezone('UTC')) - datetime.timedelta(days=5)
+
+        cursor = collection.find({
+            '$or': [
+                {
+                    'parsed': False,
+                },
+                {
+                    'date': {
+                        '$lt': expired,
+                    },
+                },
+            ],
+        }).limit(100)
         async for doc in cursor:
             await queue.put(doc)
+
+        await asyncio.sleep(5)
 
 
 async def consumer(queue, collection):
     while True:
         doc = await queue.get()
-
-        perms = parse(doc['id'], doc['hl'])
+        data = parse(doc['id'], doc['hl'])
 
         await collection.update_one({'_id': doc['_id']}, {'$set': {
             'parsed': True,
-            'perms': perms,
+            'title': data['title'],
+            'company': data['company'],
+            'perms': data['perms'],
             'date': datetime.now(tz=pytz.timezone('UTC')),
         }})
-
-        print('updated')
 
         queue.task_done()
 
 
 def parse(id, hl):
-    print('parsing: %s, %s' % (id, hl))
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0',
         'Accept': '*/*',
@@ -51,6 +60,24 @@ def parse(id, hl):
         'Connection': 'keep-alive',
         'TE': 'Trailers',
     }
+
+    params = {
+        'id': id,
+        'hl': hl,
+    }
+
+    response = requests.get('https://play.google.com/store/apps/details', headers=headers, params=params)
+
+    matches = re.search(r'<meta itemprop="name" content="(.*?)\"', response.text, flags=re.M | re.S)
+    product_title = ''
+    if matches:
+        product_title = matches.group(1)
+
+    matches = re.search(r'<a.*?href="https://play.google.com/store/apps/developer\?id=.*?".*?>(.*?)</a>', response.text,
+                        flags=re.M | re.S)
+    company = ''
+    if matches:
+        company = matches.group(1)
 
     params = {
         'rpcids': 'xdSrCf',
@@ -69,7 +96,6 @@ def parse(id, hl):
 
     response = requests.post('https://play.google.com/_/PlayStoreUi/data/batchexecute', headers=headers, params=params,
                              data=data)
-
     text = re.sub(r'^.*?\[', '[', response.text, flags=re.S)
     text = re.sub(r',,', ',null,', text, flags=re.M | re.S)
     text = re.sub(r',,', ',null,', text, flags=re.M | re.S)
@@ -84,31 +110,36 @@ def parse(id, hl):
     perms = []
 
     for item in data:
-        title = item[0]
-        icon = item[1][3][2]
-        perm_list = item[2]
-        permissions = []
-        for p in perm_list:
-            if isinstance(p, list):
-                permissions.append(p[1])
+        if len(item):
+            title = item[0]
+            icon = item[1][3][2]
+            perm_list = item[2]
+            permissions = []
+            for p in perm_list:
+                if isinstance(p, list):
+                    permissions.append(p[1])
 
-        m = hashlib.md5()
-        m.update(icon.encode())
-        icon_name = m.hexdigest() + '.png'
+            m = hashlib.md5()
+            m.update(icon.encode())
+            icon_name = m.hexdigest() + '.png'
 
-        icon_path = '../icons/' + icon_name
-        if not os.path.exists(icon_path):
-            r = requests.get(icon)
-            with open(icon_path, 'wb') as f:
-                f.write(r.content)
+            icon_path = '../icons/' + icon_name
+            if not os.path.exists(icon_path):
+                r = requests.get(icon)
+                with open(icon_path, 'wb') as f:
+                    f.write(r.content)
 
-        perms.append({
-            'title': title,
-            'icon': icon_name,
-            'perms': permissions,
-        })
+            perms.append({
+                'title': title,
+                'icon': icon_name,
+                'perms': permissions,
+            })
 
-    return perms
+    return {
+        'title': product_title,
+        'company': company,
+        'perms': perms,
+    }
 
 
 async def main():
