@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import asyncio, random, time
+import asyncio
 import motor.motor_asyncio
 from datetime import datetime, timedelta
 import pytz
@@ -13,7 +13,7 @@ import hashlib
 
 async def producer(queue, collection):
     while True:
-        expired = datetime.now(tz=pytz.timezone('UTC')) - datetime.timedelta(days=5)
+        expired = datetime.now(tz=pytz.timezone('UTC')) - timedelta(days=int(os.environ['REPARSE_EVERY_DAYS']))
 
         cursor = collection.find({
             '$or': [
@@ -26,16 +26,17 @@ async def producer(queue, collection):
                     },
                 },
             ],
-        }).limit(100)
+        }).limit(int(os.environ['DB_READ_COUNT']))
         async for doc in cursor:
             await queue.put(doc)
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(int(os.environ['DB_READ_DELAY']))
 
 
 async def consumer(queue, collection):
     while True:
         doc = await queue.get()
+        print('consumed: %s' % doc['id'])
         data = parse(doc['id'], doc['hl'])
 
         await collection.update_one({'_id': doc['_id']}, {'$set': {
@@ -50,6 +51,7 @@ async def consumer(queue, collection):
 
 
 def parse(id, hl):
+    print('Parse: %s' % id)
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:65.0) Gecko/20100101 Firefox/65.0',
         'Accept': '*/*',
@@ -72,6 +74,7 @@ def parse(id, hl):
     product_title = ''
     if matches:
         product_title = matches.group(1)
+    print('product_title: %s' % product_title)
 
     matches = re.search(r'<a.*?href="https://play.google.com/store/apps/developer\?id=.*?".*?>(.*?)</a>', response.text,
                         flags=re.M | re.S)
@@ -109,6 +112,8 @@ def parse(id, hl):
 
     perms = []
 
+    print(data)
+
     for item in data:
         if len(item):
             title = item[0]
@@ -143,13 +148,16 @@ def parse(id, hl):
 
 
 async def main():
+    print('-------------------------------------------')
+    print('Starting parser')
+    print('-------------------------------------------')
     queue = asyncio.Queue()
 
-    client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://root:gfhjkm@127.0.0.1:27017')
+    client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://%s:%s@%s:%s' % (
+        os.environ['MONGO_USER'], os.environ['MONGO_PASS'], os.environ['MONGO_HOST'], os.environ['MONGO_PORT']))
     db = client.google
     collection = db.products
 
-    # fire up the both producers and consumers
     producers = [asyncio.ensure_future(producer(queue, collection))
                  for _ in range(1)]
     consumers = [asyncio.ensure_future(consumer(queue, collection))
