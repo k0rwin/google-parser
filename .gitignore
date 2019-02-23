@@ -2,5 +2,5 @@
 
 .idea
 
-icons/
+icons/*.png
 src/static/node_modules/

@@ -1,7 +1,6 @@
 FROM python:3.6
 
 RUN mkdir /code
-RUN mkdir /icons
 WORKDIR /code
 ADD . /code/
 RUN pip install -r requirements.txt
